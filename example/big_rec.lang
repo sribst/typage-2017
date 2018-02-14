@@ -1,0 +1,13 @@
+fun x -> x
+fun x -> + (x, x)
+fun f -> fun n -> if (n, (1, (* (n, f (- (n, 1))))))
+let fact = fun f -> fun n -> if (n, (1, (* (n, f (- (n, 1)))))) in (fix fact)
+fun x -> x x 
+fun f -> (fun x -> f (x x)) (fun x -> f (x x))
+fun f -> (fun x -> x x) (fun x -> f (x x ))
+fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))
+let f = fun x -> fun y -> y( x (x y)) in f f
+(fun x -> fun y -> y (x (x y))) (fun x -> fun y -> y (x (x y)))
+fun d -> d (d d) (d d)
+fun d -> d d d d d
+fun d -> fun t -> t d d t t d d t

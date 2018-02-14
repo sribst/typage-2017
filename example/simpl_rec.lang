@@ -1,0 +1,2 @@
+fun x -> x x
+fun x -> fun y -> x y x

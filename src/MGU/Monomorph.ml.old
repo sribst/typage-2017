@@ -1,0 +1,37 @@
+open TypeAST
+
+let apply sys_eq t = Type.substitute sys_eq t
+
+exception Cyclique  of TypeAST.ground * TypeAST.t
+exception NoTypable of TypeAST.t * TypeAST.t
+
+let rec mgu_one = function
+  | TBool, TBool
+  | TInt , TInt  -> []
+  | (t1, t2) when t1 = t2 -> []
+  | (Ground x, Ground y) ->
+    if x = y then [] else [(x, Ground y)]
+  | (Arrow (x, y), Arrow (x', y')) ->
+    mgu [(x,x');(y,y')]
+  | (Cross (x, y), Cross (x', y')) ->
+    mgu [(x,x');(y,y')]
+  | (TBool, Ground x) | (Ground x , TBool) ->
+    [(x, TBool)]
+  | (TInt , Ground x) | (Ground x , TInt ) ->
+    [(x, TInt)]
+  | (Ground x, t) | (t, Ground x) ->
+    if Type.occurs x t then raise (Cyclique (x,t))
+    else [(x, t)]
+  | t1, t2 -> raise (NoTypable (t1,t2))
+
+and mgu = function
+  | [] -> []
+  | (x, y)::t ->
+    let t2 = mgu t in
+    let t1 = mgu_one ((apply t2 x), (apply t2 y)) in
+    t1 @ t2
+
+let infer f =
+  let f_t, s_e = GenerateConstraint.system_equation f in
+  let uni = mgu s_e in
+  apply uni f_t

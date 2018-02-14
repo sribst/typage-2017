@@ -1,0 +1,2 @@
+let f = fun x -> fun y -> y( x (x y)) in f f
+(fun x -> fun y -> y (x (x y))) (fun x -> fun y -> y (x (x y)))

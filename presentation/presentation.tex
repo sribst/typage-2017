@@ -1,0 +1,208 @@
+\documentclass{beamer}
+
+\usepackage[frenchb]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8x]{inputenc}
+\usetheme{metropolis}
+
+\author{Sylvain Ribstein}
+\date{Typage, \today}
+\title{Typage Recursif}
+ 
+\institute[P7]{
+  Master 2 de Recherche en Informatique 
+  \\Paris 7 - Diderot}
+
+\usepackage{listings}
+\lstdefinestyle{ocaml}{
+  language=caml,
+  stepnumber=1,
+  numbersep=8pt,
+  tabsize=2,
+  showspaces=false,
+  showstringspaces=false,
+  keywordstyle = \color{red}
+}
+\lstset{basicstyle=\tiny,style=ocaml}
+
+\usepackage[framemethod=TikZ]{mdframed}
+
+\usepackage{tikz}
+\usetikzlibrary{arrows,snakes,backgrounds}
+\tikzset{
+  [->,
+  >=latex',
+  shorten >=1pt,
+  auto,
+  node distance=3cm,
+  semithick,
+  every state/.style={fill=red,draw=none,text=white}]}
+
+\tikzstyle{transform} = [rectangle,draw=blue!50,thick, inner sep = 2pt, minimum size = 10mm]
+
+\AtBeginSection[]{
+  \begin{frame}{Sommaire}
+  \small \tableofcontents[currentsection, hideothersubsections]
+  \end{frame} 
+}
+\begin{document}
+
+\frame{\titlepage}
+
+% \begin{frame}
+%   \frametitle{Table des matières}
+%   \tableofcontents
+% \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{LangAST}
+  \begin{mdframed}[roundcorner=20pt,backgroundcolor=gray!50]
+    \begin{lstlisting}
+      type exp =
+        | Var   of var 
+        | Const of const
+        | Pair  of exp * exp
+        | App   of exp * exp
+        | Abs   of var * exp
+        | Let   of var * exp * exp
+
+      and const = 
+        | Fct  of string
+        | Bool of bool
+        | Int  of int 
+
+      and var = string 
+        
+      and t = exp
+    \end{lstlisting}
+  \end{mdframed}
+\end{frame} 
+
+\begin{frame}[fragile]
+  \frametitle{TypeAST}
+  \begin{mdframed}[roundcorner=20pt,backgroundcolor=gray!50]
+    \begin{lstlisting}
+      type ty =
+        | TInt | TBool
+        | Ground of ground
+        | Cross of ty * ty
+        | Arrow of ty * ty
+        | Rec of ground * ty
+
+      and ground = string
+      
+      and t = ty
+    \end{lstlisting}
+  \end{mdframed}
+\end{frame} 
+\begin{frame}
+  \frametitle{Generation de Contrainte}
+  Parcours en profondeur de l'expression :
+  \begin{itemize}
+  \item environnement des variables introduites 
+  \item type expecté de l'élément courant 
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Generation de Contrainte}
+  \begin{mdframed}[roundcorner=20pt,backgroundcolor=gray!50]
+    \begin{lstlisting}
+      let system_equation p =
+        let rec aux env sys_eq expected= function
+          | Var x ->
+            let x_t =
+              try (List.assoc x env)
+              with _ -> raise (Unbound x)
+            in
+            (x_t, expected)::sys_eq
+          | Const (Fct f)  -> (List.assoc f env, expected)::sys_eq
+          | Const (Bool _) -> (TBool, expected)::sys_eq
+          | Const (Int _)  -> (TInt,  expected)::sys_eq
+          | Pair (m, n)    ->
+            let m_t = fresh_ground () in
+            let n_t = fresh_ground () in
+            let sys_eq = aux env sys_eq m_t m in
+            let sys_eq = aux env sys_eq n_t n in
+            (Cross(m_t, n_t),expected)::sys_eq
+
+    \end{lstlisting}
+  \end{mdframed}
+\end{frame} 
+
+\begin{frame}[fragile]
+  \frametitle{Generation de Contrainte}
+  \begin{mdframed}[roundcorner=20pt,backgroundcolor=gray!50]
+    \begin{lstlisting}
+          | App(func, arg) ->
+            let arg_t = fresh_ground () in
+            let func_t = Arrow(arg_t,expected) in
+            let sys_eq = aux env sys_eq func_t func in
+            aux env sys_eq arg_t arg
+          | Abs(x, m)      ->
+            let x_t    = fresh_ground ()  in
+            let m_t    = fresh_ground ()  in
+            let env    = (x, x_t)::env        in
+            let sys_eq = aux env sys_eq m_t m in
+            (Arrow(x_t, m_t), expected)::sys_eq
+          | Let (x, m, n)  ->
+            let x_t    = fresh_ground ()  in
+            let sys_eq = aux env sys_eq x_t m in
+            let env    = (x, x_t)::env        in
+            aux env sys_eq expected n
+        in
+        let final_type = fresh_ground () in
+        final_type, (aux fct_type [] final_type p)
+    \end{lstlisting}
+  \end{mdframed}
+\end{frame} 
+
+\begin{frame}
+  \frametitle{MGU avec type recursif}
+  Pour chaque équation de contrainte généré :
+  \begin{itemize}
+  \item les règles de transformation sont appliquées
+  \item les substitutions introduites sont appliquées au restes des
+    équations
+  \end{itemize}
+  L'ensemble des substitutions sont renvoyées.
+  
+  type recursif 
+  \begin{itemize}
+  \item Si occurs-check alors introduction d'un type récursif
+  \item Si un type recursif alors le type est déplié et l'unification
+    reprend
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{MGU avec type recursif}
+  \begin{mdframed}[roundcorner=20pt,backgroundcolor=gray!50]
+    \begin{lstlisting}
+      let rec mgu_one = function
+        | (t1, t2) when t1 = t2 -> []
+        | (Ground x, Ground y) ->  [(x, Ground y)]
+        | (TBool, Ground x) | (Ground x, TBool) -> [(x, TBool)]
+        | (TInt, Ground x) | (Ground x, TInt ) -> [(x, TInt)]
+        | (Arrow (x, y), Arrow (x', y')) -> mgu [(x, x');(y, y')]
+        | (Cross (x, y), Cross (x', y')) -> mgu [(x, x');(y, y')]
+        | (Ground x, t) | (t, Ground x) ->
+          if (Type.occurs x t) then [(x, Rec (x, t))]
+          else [(x, t)]
+        | Rec (x, x_t), t
+        | t, Rec (x, x_t) ->
+          let x_t = apply [(x, Rec (x, x_t))] x_t in
+          mgu_one (x_t, t)
+        | t1, t2 -> raise (NoTypable (t1, t2))
+
+      and mgu = function
+        | [] -> []
+        | (x, y)::t ->
+          let sub_tl = mgu t in
+          let sub_hd = mgu_one ((apply sub_tl x), (apply sub_tl y)) in
+          sub_hd @ sub_tl
+    \end{lstlisting}
+  \end{mdframed}
+\end{frame} 
+
+\end{document}

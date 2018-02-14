@@ -1,0 +1,25 @@
+open LangAST
+
+(** [alpha_conv x y t] : alpha conversion of variable x to the *)
+(** variable y in the term t *)
+val alpha_conv : var -> var -> exp -> exp 
+
+(** [fresh_id ()] : fresh identificator of variable *)
+val fresh_id : unit -> var
+
+(** [alphaconv_all_var t] create fresh variable for all existing *)
+(** variable in t and convert the term with [alpha_conv]. return the *)
+(** term and the list of fresh variable created *)
+val alphaconv_all_var : exp -> exp
+
+val to_string : exp -> string
+
+(** [catch_free_var t] the free variable of the term t (not up to alpha-conv) *)
+(* val catch_free_var : exp -> var list *)
+
+(** [substitute l t] substitute all variable in [l] by the associated *)
+(** term, in the term t (not up to alpha-conv) *)
+(* val substitute : (var * exp) list -> exp -> exp  *)
+
+(** [reduction t] reduce the term t with the reduction rules seen in class  *)
+(* val reduction : exp -> exp *)

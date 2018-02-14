@@ -1,0 +1,2 @@
+fun f -> fun n -> if (n, (1, (* (n, f (- (n, 1))))))
+let fact = fun f -> fun n -> if (n, (1, (* (n, f (- (n, 1)))))) in (fix fact)

@@ -1,0 +1,11 @@
+exception Cyclique  of TypeAST.ground * TypeAST.t
+exception NoTypable of TypeAST.t * TypeAST.t
+
+(** [mgu sys_eq] : mgu use to solve a equation system, resolve without *)
+(** recursive type. *)
+(** Raise Cyclique if occurs check in an equation *)
+(** Raise NoTypable if try to unified two "different" type *)
+val mgu : (TypeAST.t * TypeAST.t) list -> (TypeAST.ground * TypeAST.t) list
+
+(** [infer t] :  type (if possible) of the term [t] *)
+val infer : LangAST.exp -> TypeAST.t

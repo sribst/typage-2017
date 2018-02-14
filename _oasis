@@ -1,0 +1,72 @@
+OASISFormat:             0.4
+Name:                    BARTYPE
+Version:                 0.1
+Synopsis:                Type checker for recursive type 
+Authors:                 Sylvain Ribstein
+License:                 MIT
+Plugins:                 META (0.4), DevFiles (0.4)
+AlphaFeatures:           ocamlbuild_more_args
+BuildTools:              ocamlbuild, ocamllex, menhir
+OCamlVersion:            >= 4.04
+
+AlphaFeatures:           ocamlbuild_more_args
+XOCamlbuildExtraArgs:    -use-menhir
+
+# +-------------------------------------------------------------------+
+# | Utilities                                                         |
+# +-------------------------------------------------------------------+
+
+Library utilites
+  Install:               false
+  Path:                  src/Utilities
+  Modules:               Error, Position, SyntacticAnalysis
+
+# +-------------------------------------------------------------------+
+# | Lang                                                              |
+# +-------------------------------------------------------------------+
+
+Library lang
+  Install:               false
+  Path:                  src/Lang
+  Modules:               LangAST, Lang
+
+# +-------------------------------------------------------------------+
+# | Type                                                              |
+# +-------------------------------------------------------------------+
+
+Library type
+  Install:               false
+  Path:                  src/Type
+  Modules:               TypeAST, Type
+
+# +-------------------------------------------------------------------+
+# | Parser                                                            |
+# +-------------------------------------------------------------------+
+
+Library parser
+  Install:               false
+  Path:                  src/Parser
+  Modules:               Parser, Lexer
+  BuildTools:            ocamlbuild, menhir, ocamllex
+  BuildDepends:		 lang, utilites
+
+# +-------------------------------------------------------------------+
+# | MGU                                                               |
+# +-------------------------------------------------------------------+
+
+Library mgu
+  Install:               false
+  Path:                  src/MGU
+  Modules:               GenerateConstraint, RecMonomorph
+  BuildDepends:		 lang, type
+
+# +-------------------------------------------------------------------+
+# | Top                                                               |
+# +-------------------------------------------------------------------+
+
+Executable main
+  Install:               false
+  CompiledObject:        best
+  Path:                  src/
+  MainIs:                main.ml
+  BuildDepends:		 mgu, parser
