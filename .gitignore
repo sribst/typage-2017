@@ -1,0 +1,35 @@
+# EXECUTABLE
+*.native
+*.byte
+
+# OASIS
+
+*.docdir
+*.mldylib
+*.mllib
+META
+
+_build
+_tags
+setup.data
+setup.log
+setup.ml
+configure
+Makefile
+myocamlbuild.ml
+
+# EMACS
+*~
+#*#
+
+# LATEX 
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+
+# OTHER
+*.old

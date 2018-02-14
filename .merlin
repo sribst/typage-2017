@@ -1,0 +1,15 @@
+S src
+S src/Utilities
+S src/Parser
+S src/Lang
+S src/Type
+S src/MGU
+
+PKG  menhir
+
+B _build/src
+B _build/src/Utilities
+B _build/src/Parser
+B _build/src/Lang
+B _build/src/Type
+B _build/src/MGU
